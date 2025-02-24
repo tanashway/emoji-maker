@@ -9,6 +9,7 @@ interface EmojiGridProps {
   emojis: Emoji[];
   onLike?: (id: string) => void;
   onDownload?: (url: string) => void;
+  isLiked: (id: string) => boolean;
 }
 
 const isValidUrl = (url: unknown): url is string => {
@@ -21,7 +22,7 @@ const isValidUrl = (url: unknown): url is string => {
   }
 };
 
-export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
+export function EmojiGrid({ emojis, onLike, onDownload, isLiked }: EmojiGridProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-4xl">
       {emojis.filter(emoji => isValidUrl(emoji.url)).map((emoji) => (
@@ -41,7 +42,7 @@ export function EmojiGrid({ emojis, onLike, onDownload }: EmojiGridProps) {
               onClick={() => onLike?.(emoji.id)}
             >
               <Heart 
-                className={`h-4 w-4 ${emoji.likes > 0 ? 'text-red-500 fill-red-500' : 'text-white'}`} 
+                className={`h-4 w-4 transition-colors ${isLiked(emoji.id) ? 'text-red-500 fill-red-500' : 'text-white'}`} 
               />
               {emoji.likes > 0 && (
                 <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">

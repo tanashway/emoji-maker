@@ -5,9 +5,12 @@ import { EmojiGeneratorForm } from "@/components/emoji-generator-form";
 import { EmojiGrid } from "@/components/emoji-grid";
 import { LoadingAnimation } from "@/components/loading-animation";
 import { toast } from "sonner";
+import Image from "next/image";
+import { Download, Heart } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
-  const { emojis, isLoading, setIsLoading, addEmojis, likeEmoji } = useEmojiStore();
+  const { emojis, isLoading, setIsLoading, addEmojis, toggleLike, isLiked } = useEmojiStore();
 
   const handleGenerate = async (prompt: string) => {
     try {
@@ -68,9 +71,12 @@ export default function Home() {
   };
 
   const handleLike = (id: string) => {
-    likeEmoji(id);
-    toast.success("Emoji liked!");
+    toggleLike(id);
+    const liked = isLiked(id);
+    toast.success(liked ? "Added to favorites!" : "Removed from favorites");
   };
+
+  const latestEmoji = emojis[0];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -91,13 +97,59 @@ export default function Home() {
 
         {isLoading ? (
           <LoadingAnimation />
-        ) : emojis.length > 0 ? (
-          <EmojiGrid
-            emojis={emojis}
-            onLike={handleLike}
-            onDownload={handleDownload}
-          />
-        ) : (
+        ) : latestEmoji ? (
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-64 h-64 group">
+              <Image
+                src={latestEmoji.url}
+                alt={`Latest emoji: ${latestEmoji.prompt}`}
+                fill
+                className="object-contain rounded-lg"
+                unoptimized
+              />
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-4">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-12 w-12 bg-white/20 hover:bg-white/40"
+                  onClick={() => handleLike(latestEmoji.id)}
+                >
+                  <Heart 
+                    className={`h-6 w-6 transition-colors ${isLiked(latestEmoji.id) ? 'text-red-500 fill-red-500' : 'text-white'}`} 
+                  />
+                  {latestEmoji.likes > 0 && (
+                    <span className="absolute -top-2 -right-2 text-xs bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+                      {latestEmoji.likes}
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-12 w-12 bg-white/20 hover:bg-white/40"
+                  onClick={() => handleDownload(latestEmoji.url)}
+                >
+                  <Download className="h-6 w-6 text-white" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-gray-500 dark:text-gray-400">"{latestEmoji.prompt}"</p>
+          </div>
+        ) : null}
+
+        {emojis.length > 1 && (
+          <div className="w-full">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Previously Generated</h2>
+            <EmojiGrid
+              emojis={emojis.slice(1)}
+              onLike={handleLike}
+              onDownload={handleDownload}
+              isLiked={isLiked}
+            />
+          </div>
+        )}
+
+        {!isLoading && emojis.length === 0 && (
           <div className="text-center text-gray-500 dark:text-gray-400">
             <p>No emojis generated yet.</p>
             <p className="text-sm">Enter a prompt above to get started!</p>
